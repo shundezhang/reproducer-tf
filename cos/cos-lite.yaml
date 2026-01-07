@@ -1,0 +1,77 @@
+bundle: kubernetes
+applications:
+  traefik:
+    charm: traefik-k8s
+    scale: 1
+    trust: true
+    channel: latest/stable
+  alertmanager:
+    charm: alertmanager-k8s
+    scale: 1
+    trust: true
+    channel: 1/stable
+  prometheus:
+    charm: prometheus-k8s
+    scale: 1
+    trust: true
+    channel: 1/stable
+  grafana:
+    charm: grafana-k8s
+    scale: 1
+    trust: true
+    channel: 1/stable
+  catalogue:
+    charm: catalogue-k8s
+    scale: 1
+    trust: true
+    channel: 1/stable
+    options:
+      title: Canonical Observability Stack
+      tagline: Model-driven Observability Stack deployed with a single command.
+      description: |
+        Canonical Observability Stack Lite, or COS Lite, is a light-weight, highly-integrated, 
+        Juju-based observability suite running on Kubernetes.
+  loki:
+    charm: loki-k8s
+    scale: 1
+    trust: true
+    channel: 1/stable
+  scrape-interval-config-metrics:
+    charm: prometheus-scrape-config-k8s
+    channel: 1/stable
+    scale: 1
+    options:
+      scrape_timeout: 15s
+      scrape_interval: 15s
+  scrape-interval-config-monitors:
+    charm: prometheus-scrape-config-k8s
+    channel: 1/stable
+    scale: 1
+    options:
+      scrape_timeout: 30s
+      scrape_interval: 5m
+relations:
+- [traefik:ingress-per-unit, prometheus:ingress]
+- [traefik:ingress-per-unit, loki:ingress]
+- [traefik:traefik-route, grafana:ingress]
+- [traefik:ingress, alertmanager:ingress]
+- [prometheus:alertmanager, alertmanager:alerting]
+- [grafana:grafana-source, prometheus:grafana-source]
+- [grafana:grafana-source, loki:grafana-source]
+- [grafana:grafana-source, alertmanager:grafana-source]
+- [loki:alertmanager, alertmanager:alerting]
+- [scrape-interval-config-metrics:metrics-endpoint, prometheus:metrics-endpoint]
+- [scrape-interval-config-monitors:metrics-endpoint, prometheus:metrics-endpoint]
+# COS-monitoring
+- [prometheus:metrics-endpoint, traefik:metrics-endpoint]
+- [prometheus:metrics-endpoint, alertmanager:self-metrics-endpoint]
+- [prometheus:metrics-endpoint, loki:metrics-endpoint]
+- [prometheus:metrics-endpoint, grafana:metrics-endpoint]
+- [grafana:grafana-dashboard, loki:grafana-dashboard]
+- [grafana:grafana-dashboard, prometheus:grafana-dashboard]
+- [grafana:grafana-dashboard, alertmanager:grafana-dashboard]
+# Service Catalogue
+- [catalogue:ingress, traefik:ingress]
+- [catalogue:catalogue, grafana:catalogue]
+- [catalogue:catalogue, prometheus:catalogue]
+- [catalogue:catalogue, alertmanager:catalogue]

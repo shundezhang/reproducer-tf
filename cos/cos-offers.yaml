@@ -1,0 +1,32 @@
+applications:
+  alertmanager:
+    offers:
+      alertmanager:
+        endpoints:
+        - karma-dashboard
+  grafana:
+    offers:
+      grafana:
+        endpoints:
+        - grafana-dashboard
+  loki:
+    offers:
+      loki:
+        endpoints:
+        - logging
+  prometheus:
+    offers:
+      prometheus:
+        endpoints:
+        - metrics-endpoint
+        - receive-remote-write
+  scrape-interval-config-metrics:
+    offers:
+      scrape-interval-config-metrics:
+        endpoints:
+        - configurable-scrape-jobs
+  scrape-interval-config-monitors:
+    offers:
+      scrape-interval-config-monitors:
+        endpoints:
+        - configurable-scrape-jobs

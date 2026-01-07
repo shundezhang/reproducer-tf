@@ -1,0 +1,126 @@
+applications:
+  logrotated:
+    charm: logrotated
+    bindings:
+      ? ''
+      : access-space
+    options:
+      logrotate-retention: 60
+  ubuntu-advantage:
+    charm: ubuntu-advantage
+    bindings:
+      ? ''
+      : access-space
+    channel: latest/stable
+    options:
+      token: null
+  landscape-client:
+    charm: landscape-client
+    bindings:
+      ? ''
+      : access-space
+    options:
+      account-name: standalone
+      disable-unattended-upgrades: true
+  k8s:
+    channel: 1.32/stable
+    bindings:
+      ? ''
+      : access-space
+    charm: k8s
+    expose: true
+    num_units: 3
+    options:
+      local-storage-enabled: "false"
+      load-balancer-enabled: "true"
+      load-balancer-cidrs: "10.250.120.100-10.250.120.110"
+      load-balancer-l2-mode: "true"
+      load-balancer-l2-interfaces: "br-enp5s0"
+      cluster-annotations: "k8sd/v1alpha1/cilium/devices=br-enp5s0 k8sd/v1alpha1/cilium/direct-routing-device=br-enp5s0"
+    series: jammy
+    to:
+    - '0'
+    - '1'
+    - '2'
+  ntp:
+    charm: ntp
+    bindings:
+      ? ''
+      : access-space
+    options:
+      verify_ntp_servers: true
+  ceph-mon:
+    charm: ceph-mon
+    bindings:
+      ? ''
+      : access-space
+    channel: squid/stable
+    num_units: 3
+    options:
+      expected-osd-count: 3
+      monitor-count: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+  ceph-osd:
+    charm: ceph-osd
+    bindings:
+      ? ''
+      : access-space
+    channel: squid/stable
+    num_units: 3
+    options:
+      osd-devices: /dev/sdb
+    to:
+    - 0
+    - 1
+    - 2
+  ceph-csi:
+    charm: ceph-csi
+    bindings:
+      ? ''
+      : access-space
+    channel: 1.32/stable
+    options:
+      release: "v3.13.0"
+      namespace: kube-system
+  grafana-agent-container:
+    charm: grafana-agent
+    bindings:
+      ? ''
+      : access-space
+    channel: 1/stable
+    options:
+      global_scrape_timeout: 60s
+      tls_insecure_skip_verify: true
+  grafana-agent-vm:
+    charm: grafana-agent
+    bindings:
+      ? ''
+      : access-space
+    channel: 1/stable
+    options:
+      global_scrape_timeout: 60s
+      tls_insecure_skip_verify: true
+machines:
+  '0':
+    constraints: tags=k8s
+    series: jammy
+  '1':
+    constraints: tags=k8s
+    series: jammy
+  '2':
+    constraints: tags=k8s
+    series: jammy
+series: jammy
+relations:
+- ["ceph-mon:osd", "ceph-osd:mon"]
+- ["ceph-csi:ceph-client", "ceph-mon:client"]
+- ["ceph-csi:kubernetes-info", "k8s"]
+- ["grafana-agent-vm:cos-agent", "k8s:cos-agent"]
+- ["grafana-agent-container:cos-agent", "ceph-mon:cos-agent"]
+- ['k8s:juju-info', 'ubuntu-advantage:juju-info']
+- ['k8s:juju-info', 'landscape-client:container']
+- ['k8s:juju-info', 'logrotated:juju-info']
+- ['k8s:juju-info', 'ntp:juju-info']
